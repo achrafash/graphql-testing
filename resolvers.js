@@ -1,53 +1,71 @@
-const dummyUser = {
-    id: 0,
-    firstname: "Elon",
-    lastname: "Musk",
-    email: "elon@tesla.com",
-    createdAt: new Date(),
-};
-const dummyAsset = {
-    id: 0,
-    owner: dummyUser,
-    title: "Tesla in the metaverse",
-    description: "Might as well have an electric car in the metaverse...",
-    price: 12,
-    published: false,
-};
-
-// creates a new user
-function createUser({ email, firstname, lastname }) {
-    return { id: 0, email, firstname, lastname, createdAt: new Date() };
-}
-
-// creates a new asset
-function createAsset({ uid, title, description, price }) {
-    return { owner: dummyUser, title, description, price };
-}
-
-// make an asset public
-async function publishAsset({ id }) {
-    // TODO - get asset
-    return { ...dummyAsset, published: true };
-}
-
-// transfer ownership of an asset from one user to another
-async function transferAsset({ sellerId, buyerId, assetId }) {
-    return sellerId !== buyerId;
-}
-
-function user({ id }) {
-    return dummyUser.id == id ? { ...dummyUser, assets: [dummyAsset] } : null;
-}
-
-function asset({ id }) {
-    return dummyAsset.id == id ? dummyAsset : null;
-}
-
 module.exports = {
-    createUser,
-    createAsset,
-    publishAsset,
-    transferAsset,
-    user,
-    asset,
-};
+    User: {
+        assets: ({ id }, _args, context) => {
+            return context.db.assets.filter((record) => record.ownedBy == id)
+        },
+    },
+    Asset: {
+        owner: ({ ownedBy }, _args, context) => {
+            return context.db.users.filter((record) => record.id == ownedBy)[0]
+        },
+        creator: ({ createdBy }, _args, context) => {
+            return context.db.users.filter(
+                (record) => record.id == createdBy
+            )[0]
+        },
+    },
+
+    Query: {
+        user: (_parent, { id }, context) => {
+            const user = context.db.users.filter((record) => record.id == id)
+            if (user.length === 0) return null
+            return user[0]
+        },
+
+        asset: (_parent, { id }, context) => {
+            const asset = context.db.assets.filter((record) => record.id == id)
+            if (asset.length === 0) return null
+            return asset[0]
+        },
+    },
+
+    Mutation: {
+        createUser: (_parent, { email, firstname, lastname }, context) => {
+            const newUser = {
+                id: 0,
+                email,
+                firstname,
+                lastname,
+                createdAt: new Date(),
+            }
+            context.db.users.push(newUser)
+            return newUser
+        },
+        createAsset: (_parent, { uid, title, description, price }, context) => {
+            const newAsset = { ownerId: uid, title, description, price }
+            context.db.assets.push(newAsset)
+            return newAsset
+        },
+        publishAsset: async (_parent, { id }, context) => {
+            const asset = context.db.assets.filter((record) => record.id == id)
+            if (asset.length === 0) return false
+
+            asset.published = true
+            return true
+        },
+        transferAsset: (_parent, { sellerId, buyerId, assetId }, context) => {
+            const asset = context.db.assets.filter(
+                (record) => record.id == assetId
+            )
+            if (asset.length === 0) return false
+            const buyer = context.db.users.filter(
+                (record) => record.id == buyerId
+            )
+            if (buyer.length === 0) return false
+            if (asset[0].ownerId != sellerId) return false
+
+            asset[0].ownedBy = buyerId
+            return true
+        },
+    },
+}

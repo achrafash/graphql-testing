@@ -1,0 +1,37 @@
+type User {
+    id: ID!
+    email: String!
+    firstname: String!
+    lastname: String!
+    createdAt: String!
+    assets: [Asset!]!
+}
+
+type Asset {
+    id: ID!
+    price: Float!
+    title: String!
+    description: String
+    published: Boolean!
+    createdBy: ID!
+    ownedBy: ID!
+    owner: User!
+    creator: User!
+}
+
+type Query {
+    user(id: ID!): User
+    asset(id: ID!): Asset
+}
+
+type Mutation {
+    createAsset(
+        title: String!
+        uid: ID!
+        description: String!
+        price: Float!
+    ): Asset
+    createUser(email: String!, firstname: String!, lastname: String!): User
+    publishAsset(id: ID!): Boolean
+    transferAsset(sellerId: ID!, buyerId: ID!, assetId: ID!): Boolean
+}
