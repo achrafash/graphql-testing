@@ -1,13 +1,14 @@
 const fs = require('fs')
 const path = require('path')
-const db = require('../db')
+const db = require('../src/db')
 const EasyGraphQLTester = require('easygraphql-tester')
+const getFriends = require('../src/getFriends')
 
 const schemaCode = fs.readFileSync(
-    path.join(__dirname, '..', 'schema.gql'),
+    path.join(__dirname, '..', 'src', 'schema.gql'),
     'utf-8'
 )
-const resolvers = require('../resolvers')
+const resolvers = require('../src/resolvers')
 
 describe('Resolvers', () => {
     let tester
@@ -15,39 +16,34 @@ describe('Resolvers', () => {
         tester = new EasyGraphQLTester(schemaCode, resolvers)
     })
 
-    it('Should return the right user with given id', async () => {
-        const query = `
-            query GET_USER($id: ID!) {
-                user(id: $id) {
-                    id
-                    firstname
-                    lastname
-                }
-            }
-        `
-        const args = { id: '0' }
+    it('Should get friends of user from their id', () => {
+        // unit testing the Javascript function
+        const userId = 0
+        const friends = getFriends(db, userId)
 
-        const result = await tester.graphql(query, undefined, { db }, args)
-        expect(result.data.user.id).toBe(args.id)
-        expect(result.data.user.firstname).toBe('Elon')
-        expect(result.data.user.lastname).toBe('Musk')
+        expect(friends.length).toBe(1)
+        expect(friends[0]).toHaveProperty('id')
+        expect(friends[0]).toHaveProperty('firstname')
+        expect(friends[0].firstname).toBe('Eduardo')
     })
 
-    it('Should return assets of the user with given id', async () => {
+    it('Should return friends of the user with given id', async () => {
+        // integration test of the query
         const query = `
-            query GET_USER_ASSETS($id: ID!) {
-                user(id: $id) {
+            query GET_FRIENDS($userId: ID!) {
+                user(id: $userId) {
                     id
-                    assets {
+                    friends {
                         id
                     }
                 }
             }
         `
-        const args = { id: '0' }
+        const args = { userId: '0' }
         const result = await tester.graphql(query, undefined, { db }, args)
-        expect(result.data.user.id).toBe(args.id)
-        expect(result.data.user.assets).toBeInstanceOf(Array)
-        expect(result.data.user.assets).toContainEqual({ id: '0' })
+
+        expect(result.data.user.id).toBe(args.userId)
+        expect(result.data.user.friends).toBeInstanceOf(Array)
+        expect(result.data.user.friends).toContainEqual({ id: '1' })
     })
 })

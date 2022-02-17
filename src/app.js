@@ -2,7 +2,6 @@ const fs = require('fs')
 const path = require('path')
 const express = require('express')
 const { graphqlHTTP } = require('express-graphql')
-// const { buildSchema } = require('graphql')
 const { makeExecutableSchema } = require('@graphql-tools/schema')
 const db = require('./db')
 const resolvers = require('./resolvers')
@@ -22,10 +21,6 @@ app.use(
     graphqlHTTP({
         context: { db },
         schema,
-        // schema: buildSchema(
-        //     fs.readFileSync(path.join(__dirname, 'schema.gql'), 'utf-8')
-        // ),
-        // rootValue: { ...resolvers.Query, ...resolvers.Mutation },
         graphiql: true,
     })
 )

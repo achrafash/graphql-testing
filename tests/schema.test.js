@@ -1,11 +1,9 @@
-// TODO - change the name of the file
-
 const fs = require('fs')
 const path = require('path')
 const EasyGraphQLTester = require('easygraphql-tester')
 
 const schemaCode = fs.readFileSync(
-    path.join(__dirname, '..', 'schema.gql'),
+    path.join(__dirname, '..', 'src', 'schema.gql'),
     'utf-8'
 )
 
@@ -15,31 +13,19 @@ describe('Queries', () => {
         tester = new EasyGraphQLTester(schemaCode)
     })
 
-    test('Should pass with multiple queries', () => {
-        const query = `
-            query GET_USER($id: ID!){
-                user(id: $id) {
-                    id
-                    firstname
-                    lastname
-                }
-            }
-        
-        `
-        tester.test(true, query, { id: '0' })
-    })
-
     test('Should pass with nested queries', () => {
         const query = `
-            query GET_USER_ASSETS($id: ID!){
-                user(id: $id) {
+            query GET_FRIENDS($userId: ID!){
+                user(id: $userId) {
                     id
-                    assets{
+                    friends {
                         id
+                        firstname
+                        lastname
                     }
                 }
             }
         `
-        tester.test(true, query, { id: '0' })
+        tester.test(true, query, { userId: '0' })
     })
 })

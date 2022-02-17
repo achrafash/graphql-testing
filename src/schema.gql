@@ -1,0 +1,34 @@
+type User {
+    id: ID!
+    email: String!
+    firstname: String!
+    lastname: String!
+    createdAt: String!
+    friends: [User!]!
+}
+
+type Post {
+    id: ID!
+    content: String!
+    publishedAt: String!
+    author: User!
+}
+
+type FriendRequest {
+    sender: User!
+    receiver: User!
+    createdAt: String!
+    acceptedAt: String
+    declinedAt: String
+}
+
+type Query {
+    user(id: ID!): User
+    getFeed(userId: ID!): [Post!]!
+}
+
+type Mutation {
+    sendFriendRequest(userId: ID!, recipientId: ID!): FriendRequest
+    acceptFriendRequest(userId: ID!, senderId: ID!): Boolean
+    publishPost(authorId: ID!, content: String!): Post
+}
